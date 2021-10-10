@@ -31,7 +31,7 @@ class AutoInactive(commands.Cog):
         self.config = Config.get_conf(self, identifier=457758648554)
         self.config.register_guild(**default_guild)
         self.config.register_member(last_active = None)
-        self.config.register_global(active_guilds = set())
+        self.config.register_global(active_guilds = [])
         self.config.register
         # write to database in chunks to reduce accesses
         self.last_write = 0
