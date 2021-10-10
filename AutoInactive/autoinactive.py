@@ -38,10 +38,10 @@ class AutoInactive(commands.Cog):
         self.last_write = 0
         self.buffer = set()
         self.write_delay = 600  # write buffer to config every 10 minutes
+        self._checkInactivity.start()
     
     def cog_unload(self):
-        if self.main_loop:
-            self.main_loop.cancel()
+        self._checkInactivity.cancel()
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
@@ -71,36 +71,41 @@ class AutoInactive(commands.Cog):
             await self.config.member(user).last_active.set(str(datetime.date.today()))
         await self.config.guild(ctx.guild).active_list.set(active_list)
 
+    @tasks.loop(seconds=30.0)   # change to 7 days after testing
     async def _checkInactivity(self):
-        while True:
-            print("starting inactivity check")
-            active_guilds = await self.config.active_guilds()
-            for gid in active_guilds:
-                guild = self.bot.get_guild(gid)
-                print("checking guild", gid, guild.name)
-                role = await self.config.guild(guild).inactive_role()
-                role = discord.utils.get(guild.roles, id=role)
-                if not role:
-                    print("Inactive role not set, skipping inactivity check for " + guild.name)
-                    continue
+        #while True:
+        print("starting inactivity check")
+        active_guilds = await self.config.active_guilds()
+        for gid in active_guilds:
+            guild = self.bot.get_guild(gid)
+            print("checking guild", gid, guild.name)
+            role = await self.config.guild(guild).inactive_role()
+            role = discord.utils.get(guild.roles, id=role)
+            if not role:
+                print("Inactive role not set, skipping inactivity check for " + guild.name)
+                continue
 
-                active_list = await self.config.guild(guild).active_list()
-                threshold_days = await self.config.guild(guild).threshold_days()
-                threshold_date = datetime.date.today() - datetime.timedelta(days = threshold_days)
-                msg = await self.config.guild(guild).msg()
-                new_active_list = []
-                print("checking " + str(len(active_list))+ " members...")
-                for uid in active_list:
-                    user = guild.get_member(uid)
-                    last_active = await self.config.member(user).last_active()
-                    last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d").date()
-                    if last_active < threshold_date:
-                        await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
-                        await user.add_roles(role)
-                    else:
-                        new_active_list.append(uid)
-                await self.config.guild(guild).active_list.set(new_active_list)
-            await asyncio.sleep(86400)   
+            active_list = await self.config.guild(guild).active_list()
+            threshold_days = await self.config.guild(guild).threshold_days()
+            threshold_date = datetime.date.today() - datetime.timedelta(days = threshold_days)
+            msg = await self.config.guild(guild).msg()
+            new_active_list = []
+            print("checking " + str(len(active_list))+ " members...")
+            for uid in active_list:
+                user = guild.get_member(uid)
+                last_active = await self.config.member(user).last_active()
+                last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d").date()
+                if last_active < threshold_date:
+                    await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
+                    await user.add_roles(role)
+                else:
+                    new_active_list.append(uid)
+            await self.config.guild(guild).active_list.set(new_active_list)
+            #await asyncio.sleep(86400)   
+
+    @_checkInactivity.before_loop
+    async def before_checkInactivity(self):
+        await self.bot.wait_until_red_ready()
 
     async def _sendMsg(self, ctx, user, title, msg, dm = False):
         data = discord.Embed(colour=user.colour)
