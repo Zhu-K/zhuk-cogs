@@ -90,6 +90,7 @@ class AutoInactive(commands.Cog):
                 user = self.bot.get_user(uid)
                 last_active = await self.config.member(user).last_active()
                 last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d")
+                self._sendMsg(None, user, 'DEBUG', str(last_active) + "   " + str(threshold_date) + "   " + str(last_active < threshold_date) )
                 if last_active < threshold_date:
                     await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
                     await self.bot.add_roles(user, [role])
