@@ -132,7 +132,7 @@ class AutoInactive(commands.Cog):
         if ctx.guild in active_guilds:
             await self._sendMsg(ctx, ctx.author, "Error", "Automatic Inactivation already set to on for this server!")
         else:
-            active_guilds.add(ctx.guild)
+            active_guilds.append(ctx.guild)
             await self._sendMsg(ctx, ctx.author, "Success", "Automatic Inactivation set to on for this server!")
             await self.config.active_guilds.set(active_guilds)
 
