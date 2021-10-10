@@ -158,7 +158,7 @@ class AutoInactive(commands.Cog):
         role = discord.utils.get(ctx.guild.roles, name=role_name)
         if role:
             await self.config.guild(ctx.guild).inactive_role.set(role.id)
-            await self._sendMsg(ctx, ctx.author, "Success", "Inactive role set to " + role)
+            await self._sendMsg(ctx, ctx.author, "Success", "Inactive role set to " + str(role))
         else:
             await self.config.guild(ctx.guild).inactive_role.set(None)
             await self._sendMsg(ctx, ctx.author, "Error", role_name + " is not a valid role!")
