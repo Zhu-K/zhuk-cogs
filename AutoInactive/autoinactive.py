@@ -94,7 +94,7 @@ class AutoInactive(commands.Cog):
                     user = guild.get_member(uid)
                     print("checking user", uid, user.name)
                     last_active = await self.config.member(user).last_active()
-                    last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d")
+                    last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d").date()
                     self._sendMsg(None, user, 'DEBUG', str(last_active) + "   " + str(threshold_date) + "   " + str(last_active < threshold_date) )
                     if last_active < threshold_date:
                         await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
