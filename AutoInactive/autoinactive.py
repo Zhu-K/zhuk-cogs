@@ -95,7 +95,6 @@ class AutoInactive(commands.Cog):
                     print("checking user", uid, user.name)
                     last_active = await self.config.member(user).last_active()
                     last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d").date()
-                    self._sendMsg(None, user, 'DEBUG', str(last_active) + "   " + str(threshold_date) + "   " + str(last_active < threshold_date) )
                     if last_active < threshold_date:
                         await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
                         await user.add_roles(role)
@@ -116,13 +115,14 @@ class AutoInactive(commands.Cog):
     @commands.guild_only()
     async def reactivate(self, ctx):
         """reactivate an inactive account"""
+        print("reactivation request from " + ctx.author.name)
         active_guilds = await self.config.active_guilds()
         if ctx.guild.id not in active_guilds:
             return
         role = await self.config.guild(ctx.guild).inactive_role()
         role = discord.utils.get(ctx.guild.roles, id=role)
         user = ctx.author
-        if role in [i.id for i in user.roles]:
+        if role in user.roles:
             await self._sendMsg(ctx, user, "Reactivation Successful", "Congratulations, you have been reactivated!", dm=True)
             active_list = await self.config.guild(ctx.guild).active_list()
             active_list.append(user)
