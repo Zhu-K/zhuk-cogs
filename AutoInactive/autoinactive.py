@@ -221,18 +221,6 @@ class AutoInactive(commands.Cog):
             await self._sendMsg(ctx, ctx.author, "Successful", "Inactivation threshold set to " + str(days) + " days.")
         else:
             await self._sendMsg(ctx, ctx.author, "Error", "Invalid threshold input. Must be integer")
-
-    @inact.command(pass_context=True)
-    @commands.has_permissions(administrator=True)
-    @commands.guild_only()
-    async def days(self, ctx, *, threshold):
-        """Customize # of days to qualify as inactive"""
-        if threshold.isnumeric() and int(threshold) > 0:
-            days = int(threshold)
-            await self.config.guild(ctx.guild).threshold_days.set(days)
-            await self._sendMsg(ctx, ctx.author, "Successful", "Inactivation threshold set to " + str(days) + " days.")
-        else:
-            await self._sendMsg(ctx, ctx.author, "Error", "Invalid threshold input. Must be integer")
     
     @inact.command(pass_context=True)           
     @commands.guild_only()
