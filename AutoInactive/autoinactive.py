@@ -139,7 +139,6 @@ class AutoInactive(commands.Cog):
         pass        
 
     @inact.command(pass_context=True)
-    @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def on(self, ctx):
         """Starts inactivity monitoring on current server"""
@@ -169,11 +168,8 @@ class AutoInactive(commands.Cog):
                         await self.config.member(user).last_active.set(str(datetime.date.today()))
             
             await self.config.guild(ctx.guild).active_list.set(active_list)
-
-
  
     @inact.command(pass_context=True)
-    @commands.has_permissions(administrator=True)
     @commands.guild_only()   
     async def off(self, ctx):
         """Stops inactivity monitoring on current server"""
@@ -186,7 +182,6 @@ class AutoInactive(commands.Cog):
             await self._sendMsg(ctx, ctx.author, "Error", "Automatic Inactivation already set to off for this server!")
 
     @inact.command(pass_context=True)
-    @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def role(self, ctx, *, role_name):
         """Assign inactive members to existing role"""
@@ -199,7 +194,6 @@ class AutoInactive(commands.Cog):
             await self._sendMsg(ctx, ctx.author, "Error", role_name + " is not a valid role!")
 
     @inact.command(pass_context=True)
-    @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def msg(self, ctx, *, msg):
         """Customize inactivity notification message"""
@@ -211,7 +205,6 @@ class AutoInactive(commands.Cog):
             await self._sendMsg(ctx, ctx.author, "New notification Successfully Set", msg)
 
     @inact.command(pass_context=True)
-    @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def days(self, ctx, *, threshold):
         """Customize # of days to qualify as inactive"""
@@ -246,15 +239,17 @@ class AutoInactive(commands.Cog):
             data.add_field(name=k, value=v)
         await ctx.send(embed=data)
 
-    @inact.command(pass_context=True)            # DEBUG
-    @commands.has_permissions(administrator=True)
+    @inact.command(pass_context=True)
     @commands.guild_only()
-    async def inactivate(self, ctx, *, user: discord.Member):
-        """test function to make someone inactive"""
+    async def inactivate(self, ctx, *, user: discord.Member, now = False):
+        """Override to set someone inactive"""
         await self.config.member(user).last_active.set(str(datetime.date.today()-datetime.timedelta(days = 500)))
         active_list = await self.config.guild(ctx.guild).active_list()
         if user.id not in active_list:
             active_list.append(user.id)
             await self.config.guild(ctx.guild).active_list.set(active_list)
-        await self._sendMsg(ctx, ctx.author, "DEBUG", "inactivated " + user.name)
+        if now:
+            await self._checkInactivity()
+        await self._sendMsg(ctx, ctx.author, "Successful", user.name + " has been set to inactive.")
+
     
