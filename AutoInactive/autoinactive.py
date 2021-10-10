@@ -154,7 +154,7 @@ class AutoInactive(commands.Cog):
         """Assign inactive members to existing role"""
         role = discord.utils.get(ctx.guild.roles, name=role_name)
         if role:
-            await self.config.guild(ctx.guild).inactive_role.set(role[0])
+            await self.config.guild(ctx.guild).inactive_role.set(role)
             await self._sendMsg(ctx, ctx.author, "Success", "Inactive role set to " + role[0])
         else:
             await self.config.guild(ctx.guild).inactive_role.set(None)
@@ -175,7 +175,7 @@ class AutoInactive(commands.Cog):
     @commands.guild_only()
     async def days(self, ctx, *, threshold):
         """Customize # of days to qualify as inactive"""
-        if threshold.isnumeric() and threshold > 0:
+        if threshold.isnumeric() and int(threshold) > 0:
             days = int(threshold)
             await self.config.guild(ctx.guild).threshold_days.set(days)
             await self._sendMsg(ctx, ctx.author, "Successful", "Inactivation threshold set to " + str(days) + " days.")
