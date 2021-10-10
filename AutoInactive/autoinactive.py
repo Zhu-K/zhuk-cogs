@@ -20,6 +20,7 @@ class AutoInactive(commands.Cog):
     """The Automatic Inactivity Role Assigner Cog"""
 
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.DEFAULT_MSG = "BAM YOU GOT MOVED FOR INACTIVITY!!!!11"
         default_guild = {
