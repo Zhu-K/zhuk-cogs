@@ -1,7 +1,8 @@
 from redbot.core import checks, Config, utils
 from redbot.core.i18n import Translator, cog_i18n
 import discord
-from redbot.core import commands, tasks
+from discord.ext import tasks
+from redbot.core import commands
 from redbot.core.utils import mod
 import asyncio
 import datetime
