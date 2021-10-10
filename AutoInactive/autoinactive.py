@@ -101,7 +101,7 @@ class AutoInactive(commands.Cog):
                     else:
                         new_active_list.append(uid)
                 await self.config.guild(guild).active_list.set(new_active_list)
-            await asyncio.sleep(86400)   
+            await asyncio.sleep(86400.0)   
 
     async def _sendMsg(self, ctx, user, title, msg, dm = False):
         data = discord.Embed(colour=user.colour)
