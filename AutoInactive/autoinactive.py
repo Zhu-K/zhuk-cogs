@@ -212,5 +212,5 @@ class AutoInactive(commands.Cog):
         """test function to show active list"""
         active_list = await self.config.guild(ctx.guild).active_list()
         last_time = await self.config.member(ctx.author).last_active()
-        self._sendMsg(ctx,ctx.author, "Active List", active_list)
-        self._sendMsg(ctx,ctx.author, "Your last activity", str(ctx.author.id), last_time)
+        await self._sendMsg(ctx,ctx.author, "Active List", active_list)
+        await self._sendMsg(ctx,ctx.author, "Your last activity", str(ctx.author.id), last_time)
