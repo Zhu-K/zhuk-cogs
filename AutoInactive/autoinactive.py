@@ -221,14 +221,14 @@ class AutoInactive(commands.Cog):
     @commands.command(name="inactivate")
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def inactivate(self, ctx, user: discord.Member, now = None):
+    async def inactivate(self, ctx, user: discord.Member, delayed = None):
         """Override to set someone inactive"""
         await self.config.member(user).last_active.set(str(datetime.date.today()-datetime.timedelta(days = 500)))
         active_list = await self.config.guild(ctx.guild).active_list()
         if user.id not in active_list:
             active_list.append(user.id)
             await self.config.guild(ctx.guild).active_list.set(active_list)
-        if now:
+        if not delayed:
             await self._checkInactivity()
         await self._sendMsg(ctx, ctx.author, "Successful", user.name + " has been set to inactive.")
 
