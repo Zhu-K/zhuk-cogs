@@ -59,13 +59,13 @@ class AutoInactive(commands.Cog):
         active_set = await self.config.guild(ctx.guild).active_set()
 
         for user in self.buffer:
-            await self.config.member(user).last_active.set(datetime.date.today())
+            await self.config.member(user).last_active.set(str(datetime.date.today()))
 
         await self.config.guild(ctx.guild).active_set.set(active_set)
 
     @tasks.loop(seconds=30.0)   # change to 7 days after testing
     async def _checkInactivity(self):
-        active_guilds = await self.config.GLOBAL.active_guilds()
+        active_guilds = await self.config.active_guilds()
         for guild in active_guilds:
             role = await self.config.guild(guild).inactive_role()
             if not role:
@@ -79,6 +79,7 @@ class AutoInactive(commands.Cog):
             
             for user in active_set:
                 last_active = await self.config.member(user).last_active()
+                last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d")
                 if last_active < threshold_date:
                     active_set.remove(user)
                     await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
@@ -99,7 +100,7 @@ class AutoInactive(commands.Cog):
     @commands.guild_only()
     async def reactivate(self, ctx):
         """reactivate an inactive account"""
-        active_guilds = await self.config.GLOBAL.active_guilds()
+        active_guilds = await self.config.active_guilds()
         if ctx.guild not in active_guilds:
             return
         role = self.config.guild(ctx.guild).inactive_role()
@@ -109,7 +110,7 @@ class AutoInactive(commands.Cog):
             active_set = await self.config.guild(ctx.guild).active_set()
             active_set.add(user)
             await self.config.guild(ctx.guild).active_set.set(active_set)
-            await self.config.member(user).last_active.set(datetime.date.today())
+            await self.config.member(user).last_active.set(str(datetime.date.today()))
 
 
     @commands.group(name="autoinactive")
@@ -127,23 +128,23 @@ class AutoInactive(commands.Cog):
         if not role:
             await self._sendMsg(ctx, ctx.author, "Error", "Inactive role not set! Set inactive role before turning this feature on")
             return
-        active_guilds = await self.config.GLOBAL.active_guilds()
+        active_guilds = await self.config.active_guilds()
         if ctx.guild in active_guilds:
             await self._sendMsg(ctx, ctx.author, "Error", "Automatic Inactivation already set to on for this server!")
         else:
             active_guilds.add(ctx.guild)
             await self._sendMsg(ctx, ctx.author, "Success", "Automatic Inactivation set to on for this server!")
-            await self.config.GLOBAL.active_guilds.set(active_guilds)
+            await self.config.active_guilds.set(active_guilds)
 
  
     @autoinactive.command(pass_context=True)
     @commands.guild_only()   
     async def off(self, ctx):
         """Stops inactivity monitoring on current server"""
-        active_guilds = await self.config.GLOBAL.active_guilds()
+        active_guilds = await self.config.active_guilds()
         if ctx.guild in active_guilds:
             active_guilds.remove(ctx.guild)
-            await self.config.GLOBAL.active_guilds.set(active_guilds)
+            await self.config.active_guilds.set(active_guilds)
             await self._sendMsg(ctx, ctx.author, "Success", "Automatic Inactivation set to off for this server!")
         else:
             await self._sendMsg(ctx, ctx.author, "Error", "Automatic Inactivation already set to off for this server!")
@@ -186,7 +187,7 @@ class AutoInactive(commands.Cog):
     @commands.guild_only()
     async def inactivate(self, ctx, *, user: discord.Member):
         """test function to make someone inactive"""
-        await self.config.member(user).last_active.set(datetime.date.today()-datetime.timedelta(days = 500))
+        await self.config.member(user).last_active.set(str(datetime.date.today()-datetime.timedelta(days = 500)))
         await self._sendMsg(ctx, ctx.author, "DEBUG", "inactivated " + user.name)
         
 
