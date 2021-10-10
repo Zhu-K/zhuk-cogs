@@ -242,7 +242,7 @@ class AutoInactive(commands.Cog):
             "Inactive Role" : role.name
         }
         data = discord.Embed(colour=ctx.author.colour)
-        for k, v in fields:
+        for k, v in fields.items():
             data.add_field(name=k, value=v)
         await ctx.send(embed=data)
 
