@@ -56,8 +56,17 @@ class AutoInactive(commands.Cog):
             self.last_write = time.time()
             
     async def _writeBuffer(self, ctx):
+        if not self.buffer:
+            return
+        active_list = await self.config.guild(ctx.guild).active_list()
+        role = await self.config.guild(ctx.guild).inactive_role()
+        role = discord.utils.get(ctx.guild.roles, id=role)
+        active_set = set(active_list)
         for user in self.buffer:
+            if user.id not in active_set and role not in user.roles:             
+                active_list.append(user.id)
             await self.config.member(user).last_active.set(str(datetime.date.today()))
+        await self.config.guild(ctx.guild).active_list.set(active_list)
 
 
     @tasks.loop(seconds=30.0)   # change to 7 days after testing
@@ -77,14 +86,15 @@ class AutoInactive(commands.Cog):
             msg = await self.config.guild(guild).msg()
             new_active_list = []
             
-            for user in active_list:
+            for uid in active_list:
+                user = self.bot.get_user(uid)
                 last_active = await self.config.member(user).last_active()
                 last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d")
                 if last_active < threshold_date:
                     await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
                     await self.bot.add_roles(user, [role])
                 else:
-                    new_active_list.append(user)
+                    new_active_list.append(uid)
             await self.config.guild(guild).active_list.set(new_active_list)
 
 
@@ -189,6 +199,11 @@ class AutoInactive(commands.Cog):
     async def inactivate(self, ctx, *, user: discord.Member):
         """test function to make someone inactive"""
         await self.config.member(user).last_active.set(str(datetime.date.today()-datetime.timedelta(days = 500)))
+        active_list = await self.config.guild(ctx.guild).active_list()
+        if user.id not in active_list:
+            active_list.append(user.id)
+            await self.config.guild(ctx.guild).active_list.set(active_list)
+        await self.config.member(user).last_active.set(str(datetime.date.today()))
         await self._sendMsg(ctx, ctx.author, "DEBUG", "inactivated " + user.name)
         
 
