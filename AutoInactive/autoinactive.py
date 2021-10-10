@@ -94,6 +94,9 @@ class AutoInactive(commands.Cog):
             print("checking " + str(len(active_list))+ " members...")
             for uid in active_list:
                 user = guild.get_member(uid)
+                if not user:
+                    print(str(uid) + 'does not point to a valid user!')
+                    continue
                 last_active = await self.config.member(user).last_active()
                 last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d").date()
                 if last_active < threshold_date:
