@@ -249,5 +249,5 @@ class AutoInactive(commands.Cog):
             else:
                 active_dict[uid] = "unknown user"
 
-        await self._sendMsg(ctx,ctx.author, "Active List", active_dict)
+        await self._sendMsg(ctx,ctx.author, "Active List", str(active_dict))
         await self._sendMsg(ctx,ctx.author, "Your last activity", str(ctx.author.id) + ":  " + last_time)
