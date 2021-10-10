@@ -1,0 +1,11 @@
+{
+   "author": ["Kai Zhu"],
+   "min_bot_version": "3.1.1",
+   "short":"Auto-Assign Inactive Role",
+   "description":"Automatically assign inactive members to an inactive role",
+   "name":"AutoInactive",
+   "tags":[
+      "Account"
+   ],
+   "install_msg":"You just installed **AutoInactive.py**! \nAutomatically notify and assign inactive users to a role\n"
+}
