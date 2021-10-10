@@ -63,7 +63,8 @@ class AutoInactive(commands.Cog):
     @tasks.loop(seconds=30.0)   # change to 7 days after testing
     async def _checkInactivity(self):
         active_guilds = await self.config.active_guilds()
-        for guild in active_guilds:
+        for gid in active_guilds:
+            guild = self.bot.get_guild(gid)
             role = await self.config.guild(guild).inactive_role()
             role = discord.utils.get(guild.roles, id=role)
             if not role:
@@ -100,7 +101,7 @@ class AutoInactive(commands.Cog):
     async def reactivate(self, ctx):
         """reactivate an inactive account"""
         active_guilds = await self.config.active_guilds()
-        if ctx.guild not in active_guilds:
+        if ctx.guild.id not in active_guilds:
             return
         role = await self.config.guild(ctx.guild).inactive_role()
         role = discord.utils.get(ctx.guild.roles, id=role)
@@ -129,10 +130,10 @@ class AutoInactive(commands.Cog):
             await self._sendMsg(ctx, ctx.author, "Error", "Inactive role not set! Set inactive role before turning this feature on")
             return
         active_guilds = await self.config.active_guilds()
-        if ctx.guild in active_guilds:
+        if ctx.guild.id in active_guilds:
             await self._sendMsg(ctx, ctx.author, "Error", "Automatic Inactivation already set to on for this server!")
         else:
-            active_guilds.append(ctx.guild)
+            active_guilds.append(ctx.guild.id)
             await self._sendMsg(ctx, ctx.author, "Success", "Automatic Inactivation set to on for this server!")
             await self.config.active_guilds.set(active_guilds)
 
@@ -142,8 +143,8 @@ class AutoInactive(commands.Cog):
     async def off(self, ctx):
         """Stops inactivity monitoring on current server"""
         active_guilds = await self.config.active_guilds()
-        if ctx.guild in active_guilds:
-            active_guilds.remove(ctx.guild)
+        if ctx.guild.id in active_guilds:
+            active_guilds.remove(ctx.guild.id)
             await self.config.active_guilds.set(active_guilds)
             await self._sendMsg(ctx, ctx.author, "Success", "Automatic Inactivation set to off for this server!")
         else:
