@@ -68,6 +68,7 @@ class AutoInactive(commands.Cog):
         active_guilds = await self.config.active_guilds()
         for guild in active_guilds:
             role = await self.config.guild(guild).inactive_role()
+            role = discord.utils.get(guild.roles, id=role)
             if not role:
                 print("Inactive role not set, skipping inactivity check for " + guild.name)
                 continue
@@ -103,9 +104,10 @@ class AutoInactive(commands.Cog):
         active_guilds = await self.config.active_guilds()
         if ctx.guild not in active_guilds:
             return
-        role = self.config.guild(ctx.guild).inactive_role()
+        role = await self.config.guild(ctx.guild).inactive_role()
+        role = discord.utils.get(ctx.guild.roles, id=role)
         user = ctx.author
-        if role in user.roles:
+        if role in [i.id for i in user.roles]:
             await self._sendMsg(ctx, user, "Reactivation Successful", "Congratulations, you have been reactivated!", dm=True)
             active_set = await self.config.guild(ctx.guild).active_set()
             active_set.add(user)
@@ -155,11 +157,11 @@ class AutoInactive(commands.Cog):
         """Assign inactive members to existing role"""
         role = discord.utils.get(ctx.guild.roles, name=role_name)
         if role:
-            await self.config.guild(ctx.guild).inactive_role.set(role)
-            await self._sendMsg(ctx, ctx.author, "Success", "Inactive role set to " + role[0])
+            await self.config.guild(ctx.guild).inactive_role.set(role.id)
+            await self._sendMsg(ctx, ctx.author, "Success", "Inactive role set to " + role)
         else:
             await self.config.guild(ctx.guild).inactive_role.set(None)
-            await self._sendMsg(ctx, ctx.author, "Error", role_name + "is not a valid role!")
+            await self._sendMsg(ctx, ctx.author, "Error", role_name + " is not a valid role!")
 
     @autoinactive.command(pass_context=True)
     @commands.guild_only()
