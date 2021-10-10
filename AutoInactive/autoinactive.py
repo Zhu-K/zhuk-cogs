@@ -101,7 +101,7 @@ class AutoInactive(commands.Cog):
                     else:
                         new_active_list.append(uid)
                 await self.config.guild(guild).active_list.set(new_active_list)
-            await asyncio.sleep(30)   
+            await asyncio.sleep(86400)   
 
     async def _sendMsg(self, ctx, user, title, msg, dm = False):
         data = discord.Embed(colour=user.colour)
@@ -146,6 +146,7 @@ class AutoInactive(commands.Cog):
         if not role:
             await self._sendMsg(ctx, ctx.author, "Error", "Inactive role not set! Set inactive role before turning this feature on")
             return
+
         active_guilds = await self.config.active_guilds()
         if ctx.guild.id in active_guilds:
             await self._sendMsg(ctx, ctx.author, "Error", "Automatic Inactivation already set to on for this server!")
@@ -153,6 +154,20 @@ class AutoInactive(commands.Cog):
             active_guilds.append(ctx.guild.id)
             await self._sendMsg(ctx, ctx.author, "Success", "Automatic Inactivation set to on for this server!")
             await self.config.active_guilds.set(active_guilds)
+
+            active_list = []
+            role = discord.utils.get(ctx.guild.roles, id=role)
+            #active_set = set(active_list)
+
+            for user in ctx.guild.members:
+                if role not in user.roles:
+                    active_list.append(user.id)
+                    last_active = await self.config.member(user).last_active()
+                    if not last_active:
+                        await self.config.member(user).last_active.set(str(datetime.date.today()))
+            
+            await self.config.guild(ctx.guild).active_list.set(active_list)
+
 
  
     @autoinactive.command(pass_context=True)
