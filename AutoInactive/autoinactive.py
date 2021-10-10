@@ -89,10 +89,9 @@ class AutoInactive(commands.Cog):
                 threshold_date = datetime.date.today() - datetime.timedelta(days = threshold_days)
                 msg = await self.config.guild(guild).msg()
                 new_active_list = []
-                
+                print("checking " + str(len(active_list))+ " members...")
                 for uid in active_list:
                     user = guild.get_member(uid)
-                    print("checking user", uid, user.name)
                     last_active = await self.config.member(user).last_active()
                     last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d").date()
                     if last_active < threshold_date:
@@ -101,7 +100,7 @@ class AutoInactive(commands.Cog):
                     else:
                         new_active_list.append(uid)
                 await self.config.guild(guild).active_list.set(new_active_list)
-            await asyncio.sleep(86400.0)   
+            await asyncio.sleep(3600.0)   
 
     async def _sendMsg(self, ctx, user, title, msg, dm = False):
         data = discord.Embed(colour=user.colour)
