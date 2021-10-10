@@ -241,7 +241,7 @@ class AutoInactive(commands.Cog):
             "Notification Text": msg,
             "Inactive Role" : role.name
         }
-        data = discord.Embed(colour=ctx.user.colour)
+        data = discord.Embed(colour=ctx.author.colour)
         for k, v in fields:
             data.add_field(name=k, value=v)
         await ctx.send(embed=data)
