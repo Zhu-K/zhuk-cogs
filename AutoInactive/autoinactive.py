@@ -70,7 +70,7 @@ class AutoInactive(commands.Cog):
             await self.config.member(user).last_active.set(str(datetime.date.today()))
         await self.config.guild(ctx.guild).active_list.set(active_list)
 
-    @tasks.loop(seconds=30.0)   # change to 7 days after testing
+    @tasks.loop(seconds=30.0, minutes=0, hours=0, count=None)   # change to 7 days after testing
     async def _checkInactivity(self):
         print("starting inactivity check")
         active_guilds = await self.config.active_guilds()
