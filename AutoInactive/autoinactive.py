@@ -23,7 +23,7 @@ class AutoInactive(commands.Cog):
         self.bot = bot
         self.DEFAULT_MSG = "BAM YOU GOT MOVED FOR INACTIVITY!!!!11"
         default_guild = {
-            "active_set": set(),
+            "active_list": [],
             "threshold_days": 20,
             "msg": self.DEFAULT_MSG,
             "inactive_role": None
@@ -56,12 +56,9 @@ class AutoInactive(commands.Cog):
             self.last_write = time.time()
             
     async def _writeBuffer(self, ctx):
-        active_set = await self.config.guild(ctx.guild).active_set()
-
         for user in self.buffer:
             await self.config.member(user).last_active.set(str(datetime.date.today()))
 
-        await self.config.guild(ctx.guild).active_set.set(active_set)
 
     @tasks.loop(seconds=30.0)   # change to 7 days after testing
     async def _checkInactivity(self):
@@ -73,20 +70,21 @@ class AutoInactive(commands.Cog):
                 print("Inactive role not set, skipping inactivity check for " + guild.name)
                 continue
 
-            active_set = await self.config.guild(guild).active_set()
+            active_list = await self.config.guild(guild).active_list()
             threshold_days = await self.config.guild(guild).threshold_days()
             threshold_date = datetime.date.today() - datetime.timedelta(days = threshold_days)
             msg = await self.config.guild(guild).msg()
+            new_active_list = []
             
-            for user in active_set:
+            for user in active_list:
                 last_active = await self.config.member(user).last_active()
                 last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d")
                 if last_active < threshold_date:
-                    active_set.remove(user)
                     await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
                     await self.bot.add_roles(user, [role])
-
-            await self.config.guild(guild).active_set.set(active_set)
+                else:
+                    new_active_list.append(user)
+            await self.config.guild(guild).active_list.set(new_active_list)
 
 
     async def _sendMsg(self, ctx, user, title, msg, dm = False):
@@ -109,9 +107,9 @@ class AutoInactive(commands.Cog):
         user = ctx.author
         if role in [i.id for i in user.roles]:
             await self._sendMsg(ctx, user, "Reactivation Successful", "Congratulations, you have been reactivated!", dm=True)
-            active_set = await self.config.guild(ctx.guild).active_set()
-            active_set.add(user)
-            await self.config.guild(ctx.guild).active_set.set(active_set)
+            active_list = await self.config.guild(ctx.guild).active_list()
+            active_list.append(user)
+            await self.config.guild(ctx.guild).active_list.set(active_list)
             await self.config.member(user).last_active.set(str(datetime.date.today()))
 
 
