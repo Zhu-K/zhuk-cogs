@@ -38,7 +38,6 @@ class AutoInactive(commands.Cog):
         self.last_write = 0
         self.buffer = set()
         self.write_delay = 600  # write buffer to config every 10 minutes
-        bot.loop.create_task(self._checkInactivity())
     
     def cog_unload(self):
         if self.main_loop:
@@ -92,7 +91,7 @@ class AutoInactive(commands.Cog):
                 new_active_list = []
                 
                 for uid in active_list:
-                    user = self.bot.get_user(uid)
+                    user = guild.get_member(uid)
                     print("checking user", uid, user.name)
                     last_active = await self.config.member(user).last_active()
                     last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d")
