@@ -139,14 +139,14 @@ class AutoInactive(commands.Cog):
             await user.remove_roles(role)
 
 
-    @commands.group(name="autoinactive")
+    @commands.group(name="inact")
     @commands.guild_only()
     #@commands.is_owner()
-    async def autoinactive(self, ctx):
+    async def inact(self, ctx):
         """Configure inactive role assignment"""
         pass        
 
-    @autoinactive.command(pass_context=True)
+    @inact.command(pass_context=True)
     @commands.guild_only()
     async def on(self, ctx):
         """Starts inactivity monitoring on current server"""
@@ -178,7 +178,7 @@ class AutoInactive(commands.Cog):
 
 
  
-    @autoinactive.command(pass_context=True)
+    @inact.command(pass_context=True)
     @commands.guild_only()   
     async def off(self, ctx):
         """Stops inactivity monitoring on current server"""
@@ -190,7 +190,7 @@ class AutoInactive(commands.Cog):
         else:
             await self._sendMsg(ctx, ctx.author, "Error", "Automatic Inactivation already set to off for this server!")
 
-    @autoinactive.command(pass_context=True)
+    @inact.command(pass_context=True)
     @commands.guild_only()
     async def role(self, ctx, *, role_name):
         """Assign inactive members to existing role"""
@@ -202,7 +202,7 @@ class AutoInactive(commands.Cog):
             await self.config.guild(ctx.guild).inactive_role.set(None)
             await self._sendMsg(ctx, ctx.author, "Error", role_name + " is not a valid role!")
 
-    @autoinactive.command(pass_context=True)
+    @inact.command(pass_context=True)
     @commands.guild_only()
     async def msg(self, ctx, *, msg):
         """Customize inactivity notification message"""
@@ -213,7 +213,7 @@ class AutoInactive(commands.Cog):
             await self.config.guild(ctx.guild).msg.set(msg)
             await self._sendMsg(ctx, ctx.author, "New notification Successfully Set", msg)
 
-    @autoinactive.command(pass_context=True)
+    @inact.command(pass_context=True)
     @commands.guild_only()
     async def days(self, ctx, *, threshold):
         """Customize # of days to qualify as inactive"""
@@ -224,7 +224,7 @@ class AutoInactive(commands.Cog):
         else:
             await self._sendMsg(ctx, ctx.author, "Error", "Invalid threshold input. Must be integer")
 
-    @autoinactive.command(pass_context=True)            # DEBUG
+    @inact.command(pass_context=True)            # DEBUG
     @commands.guild_only()
     async def inactivate(self, ctx, *, user: discord.Member):
         """test function to make someone inactive"""
@@ -235,11 +235,19 @@ class AutoInactive(commands.Cog):
             await self.config.guild(ctx.guild).active_list.set(active_list)
         await self._sendMsg(ctx, ctx.author, "DEBUG", "inactivated " + user.name)
         
-    @autoinactive.command(pass_context=True)            # DEBUG
+    @inact.command(pass_context=True)            # DEBUG
     @commands.guild_only()
-    async def showlist(self, ctx):
+    async def show(self, ctx):
         """test function to show active list"""
         active_list = await self.config.guild(ctx.guild).active_list()
         last_time = await self.config.member(ctx.author).last_active()
-        await self._sendMsg(ctx,ctx.author, "Active List", active_list)
+        active_dict = {}
+        for uid in active_list:
+            user = ctx.guild.get_member(uid)
+            if user:
+                active_dict[uid] = user.name
+            else:
+                active_dict[uid] = "unknown user"
+
+        await self._sendMsg(ctx,ctx.author, "Active List", active_dict)
         await self._sendMsg(ctx,ctx.author, "Your last activity", str(ctx.author.id) + ":  " + last_time)
