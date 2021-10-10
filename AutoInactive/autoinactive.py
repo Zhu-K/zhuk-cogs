@@ -70,7 +70,6 @@ class AutoInactive(commands.Cog):
             await self.config.member(user).last_active.set(str(datetime.date.today()))
         await self.config.guild(ctx.guild).active_list.set(active_list)
 
-
     @tasks.loop(seconds=30.0)   # change to 7 days after testing
     async def _checkInactivity(self):
         print("starting inactivity check")
@@ -103,6 +102,9 @@ class AutoInactive(commands.Cog):
                     new_active_list.append(uid)
             await self.config.guild(guild).active_list.set(new_active_list)
 
+    @_checkInactivity.before_loop
+    async def _checkInactivity_before(self):
+        await self.client.wait_until_ready()
 
     async def _sendMsg(self, ctx, user, title, msg, dm = False):
         data = discord.Embed(colour=user.colour)
