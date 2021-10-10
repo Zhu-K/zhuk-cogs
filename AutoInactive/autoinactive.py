@@ -37,10 +37,11 @@ class AutoInactive(commands.Cog):
         self.last_write = 0
         self.buffer = set()
         self.write_delay = 600  # write buffer to config every 10 minutes
-        self._checkInactivity.start()
+        bot.loop.create_task(self._checkInactivity())
     
     def cog_unload(self):
-        self._checkInactivity.cancel()
+        if self.main_loop:
+            self.main_loop.cancel()
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
@@ -70,37 +71,38 @@ class AutoInactive(commands.Cog):
             await self.config.member(user).last_active.set(str(datetime.date.today()))
         await self.config.guild(ctx.guild).active_list.set(active_list)
 
-    @tasks.loop(seconds=30.0, minutes=0, hours=0, count=None)   # change to 7 days after testing
     async def _checkInactivity(self):
-        print("starting inactivity check")
-        active_guilds = await self.config.active_guilds()
-        for gid in active_guilds:
-            guild = self.bot.get_guild(gid)
-            print("checking guild", gid, guild.name)
-            role = await self.config.guild(guild).inactive_role()
-            role = discord.utils.get(guild.roles, id=role)
-            if not role:
-                print("Inactive role not set, skipping inactivity check for " + guild.name)
-                continue
+        while True:
+            print("starting inactivity check")
+            active_guilds = await self.config.active_guilds()
+            for gid in active_guilds:
+                guild = self.bot.get_guild(gid)
+                print("checking guild", gid, guild.name)
+                role = await self.config.guild(guild).inactive_role()
+                role = discord.utils.get(guild.roles, id=role)
+                if not role:
+                    print("Inactive role not set, skipping inactivity check for " + guild.name)
+                    continue
 
-            active_list = await self.config.guild(guild).active_list()
-            threshold_days = await self.config.guild(guild).threshold_days()
-            threshold_date = datetime.date.today() - datetime.timedelta(days = threshold_days)
-            msg = await self.config.guild(guild).msg()
-            new_active_list = []
-            
-            for uid in active_list:
-                user = self.bot.get_user(uid)
-                print("checking user", uid, user.name)
-                last_active = await self.config.member(user).last_active()
-                last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d")
-                self._sendMsg(None, user, 'DEBUG', str(last_active) + "   " + str(threshold_date) + "   " + str(last_active < threshold_date) )
-                if last_active < threshold_date:
-                    await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
-                    await self.bot.add_roles(user, [role])
-                else:
-                    new_active_list.append(uid)
-            await self.config.guild(guild).active_list.set(new_active_list)
+                active_list = await self.config.guild(guild).active_list()
+                threshold_days = await self.config.guild(guild).threshold_days()
+                threshold_date = datetime.date.today() - datetime.timedelta(days = threshold_days)
+                msg = await self.config.guild(guild).msg()
+                new_active_list = []
+                
+                for uid in active_list:
+                    user = self.bot.get_user(uid)
+                    print("checking user", uid, user.name)
+                    last_active = await self.config.member(user).last_active()
+                    last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d")
+                    self._sendMsg(None, user, 'DEBUG', str(last_active) + "   " + str(threshold_date) + "   " + str(last_active < threshold_date) )
+                    if last_active < threshold_date:
+                        await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
+                        await self.bot.add_roles(user, [role])
+                    else:
+                        new_active_list.append(uid)
+                await self.config.guild(guild).active_list.set(new_active_list)
+            await asyncio.sleep(30)   
 
     @_checkInactivity.before_loop
     async def _checkInactivity_before(self):
