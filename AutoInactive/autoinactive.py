@@ -38,7 +38,9 @@ class AutoInactive(commands.Cog):
         self.buffer = set()
         self.write_delay = 600  # write buffer to config every 10 minutes
         self._checkInactivity.start()
-
+    
+    def cog_unload(self):
+        self._checkInactivity.cancel()
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
