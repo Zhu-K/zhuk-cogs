@@ -71,9 +71,11 @@ class AutoInactive(commands.Cog):
 
     @tasks.loop(seconds=30.0)   # change to 7 days after testing
     async def _checkInactivity(self):
+        print("starting inactivity check")
         active_guilds = await self.config.active_guilds()
         for gid in active_guilds:
             guild = self.bot.get_guild(gid)
+            print("checking guild", gid, guild.name)
             role = await self.config.guild(guild).inactive_role()
             role = discord.utils.get(guild.roles, id=role)
             if not role:
@@ -88,6 +90,7 @@ class AutoInactive(commands.Cog):
             
             for uid in active_list:
                 user = self.bot.get_user(uid)
+                print("checking user", uid, user.name)
                 last_active = await self.config.member(user).last_active()
                 last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d")
                 self._sendMsg(None, user, 'DEBUG', str(last_active) + "   " + str(threshold_date) + "   " + str(last_active < threshold_date) )
