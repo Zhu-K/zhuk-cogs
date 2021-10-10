@@ -203,7 +203,10 @@ class AutoInactive(commands.Cog):
         days = await self.config.guild(ctx.guild).threshold_days()
         msg = await self.config.guild(ctx.guild).msg()
         role = await self.config.guild(ctx.guild).inactive_role()
-        role = discord.utils.get(ctx.guild.roles, id=role)
+        if role:
+            role = discord.utils.get(ctx.guild.roles, id=role).name
+        else:
+            role = "None"
         toggle = 'On' if ctx.guild.id in servers else 'Off'
         
         fields = {
@@ -211,7 +214,7 @@ class AutoInactive(commands.Cog):
             "Active Members" : len(active_list),
             "Max Inactivity": str(days) + " days",
             "Notification Text": msg,
-            "Inactive Role" : role.name
+            "Inactive Role" : role
         }
         data = discord.Embed(colour=ctx.author.colour)
         for k, v in fields.items():
