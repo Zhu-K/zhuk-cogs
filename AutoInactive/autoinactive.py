@@ -203,7 +203,6 @@ class AutoInactive(commands.Cog):
         if user.id not in active_list:
             active_list.append(user.id)
             await self.config.guild(ctx.guild).active_list.set(active_list)
-        await self.config.member(user).last_active.set(str(datetime.date.today()))
         await self._sendMsg(ctx, ctx.author, "DEBUG", "inactivated " + user.name)
         
     @autoinactive.command(pass_context=True)            # DEBUG
