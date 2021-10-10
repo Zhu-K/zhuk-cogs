@@ -98,7 +98,7 @@ class AutoInactive(commands.Cog):
                     self._sendMsg(None, user, 'DEBUG', str(last_active) + "   " + str(threshold_date) + "   " + str(last_active < threshold_date) )
                     if last_active < threshold_date:
                         await self._sendMsg(None, user, "Inactivity Notice", msg, dm=True)
-                        await self.bot.add_roles(user, [role])
+                        await user.add_roles(role)
                     else:
                         new_active_list.append(uid)
                 await self.config.guild(guild).active_list.set(new_active_list)
@@ -128,6 +128,7 @@ class AutoInactive(commands.Cog):
             active_list.append(user)
             await self.config.guild(ctx.guild).active_list.set(active_list)
             await self.config.member(user).last_active.set(str(datetime.date.today()))
+            await user.remove_roles(role)
 
 
     @commands.group(name="autoinactive")
