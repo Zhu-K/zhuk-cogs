@@ -38,6 +38,7 @@ class AutoInactive(commands.Cog):
         self.last_write = 0
         self.buffer = set()
         self.write_delay = 600  # write buffer to config every 10 minutes
+        print("attempting to start inactivity check loop")
         self._checkInactivity.start()
     
     def cog_unload(self):
