@@ -125,7 +125,7 @@ class AutoInactive(commands.Cog):
         if role in user.roles:
             await self._sendMsg(ctx, user, "Reactivation Successful", "Congratulations, you have been reactivated!", dm=True)
             active_list = await self.config.guild(ctx.guild).active_list()
-            active_list.append(user)
+            active_list.append(user.id)
             await self.config.guild(ctx.guild).active_list.set(active_list)
             await self.config.member(user).last_active.set(str(datetime.date.today()))
             await user.remove_roles(role)
