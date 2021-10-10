@@ -194,7 +194,7 @@ class AutoInactive(commands.Cog):
         else:
             await self._sendMsg(ctx, ctx.author, "Error", "Invalid threshold input. Must be integer")
 
-    @autoinactive.command(pass_context=True)
+    @autoinactive.command(pass_context=True)            # DEBUG
     @commands.guild_only()
     async def inactivate(self, ctx, *, user: discord.Member):
         """test function to make someone inactive"""
@@ -206,4 +206,11 @@ class AutoInactive(commands.Cog):
         await self.config.member(user).last_active.set(str(datetime.date.today()))
         await self._sendMsg(ctx, ctx.author, "DEBUG", "inactivated " + user.name)
         
-
+    @autoinactive.command(pass_context=True)            # DEBUG
+    @commands.guild_only()
+    async def showlist(self, ctx):
+        """test function to show active list"""
+        active_list = await self.config.guild(ctx.guild).active_list()
+        last_time = await self.config.member(ctx.author).last_active()
+        self._sendMsg(ctx,ctx.author, "Active List", active_list)
+        self._sendMsg(ctx,ctx.author, "Your last activity", str(ctx.author.id), last_time)
