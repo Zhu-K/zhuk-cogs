@@ -104,10 +104,6 @@ class AutoInactive(commands.Cog):
                 await self.config.guild(guild).active_list.set(new_active_list)
             await asyncio.sleep(30)   
 
-    @_checkInactivity.before_loop
-    async def _checkInactivity_before(self):
-        await self.client.wait_until_ready()
-
     async def _sendMsg(self, ctx, user, title, msg, dm = False):
         data = discord.Embed(colour=user.colour)
         data.add_field(name = title, value=msg)
