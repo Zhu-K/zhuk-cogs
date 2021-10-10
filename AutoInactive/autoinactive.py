@@ -110,27 +110,6 @@ class AutoInactive(commands.Cog):
         else:
             await user.send(embed=data)
 
-    @commands.command(name="reactivate")
-    @commands.guild_only()
-    async def reactivate(self, ctx):
-        """reactivate an inactive account"""
-        print("reactivation request from " + ctx.author.name)
-        role = await self.config.guild(ctx.guild).inactive_role()
-        role = discord.utils.get(ctx.guild.roles, id=role)
-        user = ctx.author
-        if not role:
-            return
-        if role in user.roles:
-            await self._sendMsg(ctx, user, "Reactivation Successful", "Congratulations, you have been reactivated!", dm=True)
-            active_list = await self.config.guild(ctx.guild).active_list()
-            active_list.append(user.id)
-            await self.config.guild(ctx.guild).active_list.set(active_list)
-            await self.config.member(user).last_active.set(str(datetime.date.today()))
-            await user.remove_roles(role)
-        else:
-            await self._sendMsg(ctx, user, "Error", "There is nothing to reactivate, you are not marked as inactive!", dm=True)
-
-
     @commands.group(name="inact")
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
@@ -239,9 +218,10 @@ class AutoInactive(commands.Cog):
             data.add_field(name=k, value=v)
         await ctx.send(embed=data)
 
-    @inact.command(pass_context=True)
+    @commands.command(name="inactivate")
+    @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def inactivate(self, ctx, *, user: discord.Member, now = False):
+    async def inactivate(self, ctx, user: discord.Member, now = None):
         """Override to set someone inactive"""
         await self.config.member(user).last_active.set(str(datetime.date.today()-datetime.timedelta(days = 500)))
         active_list = await self.config.guild(ctx.guild).active_list()
@@ -252,4 +232,22 @@ class AutoInactive(commands.Cog):
             await self._checkInactivity()
         await self._sendMsg(ctx, ctx.author, "Successful", user.name + " has been set to inactive.")
 
-    
+    @commands.command(name="reactivate")
+    @commands.guild_only()
+    async def reactivate(self, ctx):
+        """reactivate an inactive account"""
+        print("reactivation request from " + ctx.author.name)
+        role = await self.config.guild(ctx.guild).inactive_role()
+        role = discord.utils.get(ctx.guild.roles, id=role)
+        user = ctx.author
+        if not role:
+            return
+        if role in user.roles:
+            await self._sendMsg(ctx, user, "Reactivation Successful", "Congratulations, you have been reactivated!", dm=True)
+            active_list = await self.config.guild(ctx.guild).active_list()
+            active_list.append(user.id)
+            await self.config.guild(ctx.guild).active_list.set(active_list)
+            await self.config.member(user).last_active.set(str(datetime.date.today()))
+            await user.remove_roles(role)
+        else:
+            await self._sendMsg(ctx, user, "Error", "There is nothing to reactivate, you are not marked as inactive!", dm=True)
