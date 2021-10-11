@@ -63,19 +63,21 @@ class AutoInactive(commands.Cog):
                 warned = await self.config.member(user).warned()
                 messages = await user.history(limit=1).flatten()
                 if messages:
-                    last_active = messages[0].created_at    # retrieve most recent message time
+                    last_active = messages[0].created_at.date()    # retrieve most recent message time
                 else:
-                    last_active = user.created_at           # or use creation date if no messages
+                    last_active = user.created_at.date()           # or use creation date if no messages
                 
                 days_since = (datetime.date.today() - last_active).days
                 if days_since > inactivity_days:
                     await self._sendMsg(None, user, "Inactivity Notice", inactive_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
                     await user.add_roles(role)
+                    print(user.name + " has been assigned to inactive role")
                 else:
                     new_active_list.append(uid)
                     if days_since > warning_days and not warned:
                         await self.config.member(user).warned.set(True)
                         await self._sendMsg(None, user, "Inactivity Reminder", warning_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
+                        print(user.name + " has been sent an inactivity warning")
                     else:
                         if warned:                          # active again, remove warned tag
                             await self.config.member(user).warned.set(False)
