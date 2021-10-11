@@ -140,6 +140,14 @@ class AutoInactive(commands.Cog):
             await self._sendMsg(ctx, ctx.author, "Error", "Automatic Inactivation already set to off for this server!")
 
     @inact.command(pass_context=True)
+    @commands.guild_only()   
+    async def checknow(self, ctx):
+        """Force a global inactivity check now"""
+        await self._checkInactivity()
+        await self._sendMsg(ctx, ctx.author, "Success", "Inactivity check complete")
+
+
+    @inact.command(pass_context=True)
     @commands.guild_only()
     async def role(self, ctx, *, role_name):
         """Assign inactive members to existing role"""
