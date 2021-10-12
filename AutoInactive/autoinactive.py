@@ -161,7 +161,6 @@ class AutoInactive(commands.Cog):
 
         await self._sendMsg(ctx, ctx.author, "In progress", "Scanning message history for inactivity, this may take some time...")
         inactivity_days = await self.config.guild(ctx.guild).inactivity_days()
-        no_activity = datetime.datetime.now() - datetime.timedelta(days = 5000)
         cutoff = datetime.datetime.now() - datetime.timedelta(days = inactivity_days)
 
         user_activity = {}                                    # dict of user : most recent activity time
@@ -169,7 +168,7 @@ class AutoInactive(commands.Cog):
 
         for user in ctx.guild.members:
             if not user.bot and role not in user.roles:     # not bot and not already inactive
-                user_activity[user.id] = no_activity
+                user_activity[user.id] = user.joined_at
                 active_list.append(user.id)
             await self.config.guild(ctx.guild).active_list.set(active_list)
 
