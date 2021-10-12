@@ -19,7 +19,8 @@ class AutoInactive(commands.Cog):
             "inactivity_days" : 60,
             "inactive_msg": self.DEFAULT_MSG,
             "warning_msg": self.DEFAULT_WARNING,
-            "inactive_role": None
+            "inactive_role": None,
+            "newly_inactivated": []
         }
         self.config = Config.get_conf(self, identifier=457758648554)
         self.config.register_guild(**default_guild)
@@ -83,6 +84,7 @@ class AutoInactive(commands.Cog):
             inactive_msg = await self.config.guild(guild).inactive_msg()
             warning_msg = await self.config.guild(guild).warning_msg()
             new_active_list = []
+            newly_inactivated = []
             print("checking " + str(len(active_list))+ " members...")
             for uid in active_list:
                 user = guild.get_member(uid)
@@ -94,19 +96,21 @@ class AutoInactive(commands.Cog):
                 last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d").date()
                 days_since = (datetime.date.today() - last_active).days
                 if days_since > inactivity_days:
-                    # await self._sendMsg(None, user, "Inactivity Notice", inactive_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
-                    # await user.add_roles(role)
+                    await self._sendMsg(None, user, "Inactivity Notice", inactive_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
+                    await user.add_roles(role)
+                    newly_inactivated.append(user.name)
                     print(user.name + " has been assigned to inactive role")
                 else:
                     new_active_list.append(uid)
                     if days_since > warning_days and not warned:
-                        # await self.config.member(user).warned.set(True)
-                        # await self._sendMsg(None, user, "Inactivity Reminder", warning_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
+                        await self.config.member(user).warned.set(True)
+                        await self._sendMsg(None, user, "Inactivity Reminder", warning_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
                         print(user.name + " has been sent an inactivity warning")
                     else:
                         if warned:                          # active again, remove warned tag
                             await self.config.member(user).warned.set(False)
             await self.config.guild(guild).active_list.set(new_active_list)
+            await self.config.guild(guild).newly_inactivated.set(newly_inactivated)
 
     @_checkInactivity.before_loop
     async def before_checkInactivity(self):
@@ -157,7 +161,7 @@ class AutoInactive(commands.Cog):
         role = discord.utils.get(ctx.guild.roles, id=role)
         if not role:
             await self._sendMsg(ctx, ctx.author, "Error", "Inactive role not set! Set inactive role before using this feature")
-            return
+            return        
 
         await self._sendMsg(ctx, ctx.author, "In progress", "Scanning message history for inactivity, this may take some time...")
         inactivity_days = await self.config.guild(ctx.guild).inactivity_days()
@@ -165,6 +169,7 @@ class AutoInactive(commands.Cog):
 
         user_activity = {}                                    # dict of user : most recent activity time
         active_list = []
+        total_count = 0
 
         for user in ctx.guild.members:
             if not user.bot and role not in user.roles:     # not bot and not already inactive
@@ -173,11 +178,17 @@ class AutoInactive(commands.Cog):
             await self.config.guild(ctx.guild).active_list.set(active_list)
 
         for channel in ctx.guild.text_channels:
+            count = 0
+            scan_msg = await ctx.send(f'Scanning [{channel}]...')
             async for message in channel.history(limit = None, after = cutoff, oldest_first = False):
+                count += 1
+                if count % 100 == 0:
+                    await scan_msg.edit(content = f'Scanning [{channel}]: {count} ...')
                 if message.author.id in user_activity:
-                    # print(channel.name, message.created_at, message.author, message.clean_content)
                     if message.created_at > user_activity[message.author.id]:
                         user_activity[message.author.id] = message.created_at
+            await scan_msg.edit(content = f'scanned [{channel}]: {count}')
+            total_count += count
     
         for uid, last_active in user_activity.items():
             user = ctx.guild.get_member(uid)
@@ -186,9 +197,9 @@ class AutoInactive(commands.Cog):
         if check:
             await self._checkInactivity()
             active_list = await self.config.guild(ctx.guild).active_list()
-            await self._sendMsg(ctx, ctx.author, "Successful", f"Scanning complete. There are currently {len(active_list)} active users on this server.")
+            await self._sendMsg(ctx, ctx.author, "Successful", f"{total_count} messages scanned. There are currently {len(active_list)} active users on this server.")
         else:
-            await self._sendMsg(ctx, ctx.author, "Successful", "Scanning complete. Most recent activities of all users have been scanned")
+            await self._sendMsg(ctx, ctx.author, "Successful", f"{total_count} messages scanned. Inactive users will be pruned at the next scheduled check, or use the checknow command")
 
     @inact.command(pass_context=True)
     @commands.guild_only()   
@@ -207,7 +218,8 @@ class AutoInactive(commands.Cog):
     async def checknow(self, ctx):
         """Force a global inactivity check now"""
         await self._checkInactivity()
-        await self._sendMsg(ctx, ctx.author, "Success", "Inactivity check complete")
+        newly_inactivated = await self.config.guild(ctx.guild).newly_inactivated()
+        await self._sendMsg(ctx, ctx.author, "Success", "Inactivity check complete. The following users have been assigned to inactive: " + ', '.join(newly_inactivated))
 
 
     @inact.command(pass_context=True)
