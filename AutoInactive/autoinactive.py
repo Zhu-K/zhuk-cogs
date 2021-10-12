@@ -3,6 +3,7 @@ import discord
 from discord.ext import tasks
 from redbot.core import commands
 import datetime
+import time
 
 
 class AutoInactive(commands.Cog):
@@ -14,22 +15,53 @@ class AutoInactive(commands.Cog):
         self.DEFAULT_MSG = "You have been assigned the inactive role due to inactivity after {maxdays} days."
         default_guild = {
             "active_list": [],
-            "warning_days" : 5, 
-            "inactivity_days" : 20,
+            "warning_days" : 30, 
+            "inactivity_days" : 60,
             "inactive_msg": self.DEFAULT_MSG,
             "warning_msg": self.DEFAULT_WARNING,
             "inactive_role": None
         }
         self.config = Config.get_conf(self, identifier=457758648554)
         self.config.register_guild(**default_guild)
-        self.config.register_member(warned = False)
+        self.config.register_member(warned = False, last_active = None)
         self.config.register_global(active_guilds = [])
-
+        # write to database in chunks to reduce accesses
+        self.last_write = 0
+        self.buffer = set()
+        self.write_delay = 600  # write buffer to config every 10 minutes
         print("Starting inactivity check loop...")
         self._checkInactivity.start()
     
     def cog_unload(self):
         self._checkInactivity.cancel()
+
+    # monitor messages to update buffer for activity
+    @commands.Cog.listener()
+    async def on_message(self, ctx):
+        if ctx.author.bot:
+            return
+
+        user = ctx.author
+        if user not in self.buffer:
+            self.buffer.add(user)
+
+        if time.time() - self.last_write > self.write_delay:
+            await self._writeBuffer(ctx)
+            self.buffer.clear()
+            self.last_write = time.time()
+            
+    async def _writeBuffer(self, ctx):
+        if not self.buffer:
+            return
+        active_list = await self.config.guild(ctx.guild).active_list()
+        role = await self.config.guild(ctx.guild).inactive_role()
+        role = discord.utils.get(ctx.guild.roles, id=role)
+        active_set = set(active_list)
+        for user in self.buffer:
+            if user.id not in active_set and role not in user.roles:             
+                active_list.append(user.id)
+            await self.config.member(user).last_active.set(str(datetime.date.today()))
+        await self.config.guild(ctx.guild).active_list.set(active_list)
 
     @tasks.loop(hours = 24.0) 
     async def _checkInactivity(self):
@@ -45,7 +77,6 @@ class AutoInactive(commands.Cog):
                 continue
 
             active_list = await self.config.guild(guild).active_list()
-
             inactivity_days = await self.config.guild(guild).inactivity_days()
             warning_days = await self.config.guild(guild).warning_days()
 
@@ -53,30 +84,24 @@ class AutoInactive(commands.Cog):
             warning_msg = await self.config.guild(guild).warning_msg()
             new_active_list = []
             print("checking " + str(len(active_list))+ " members...")
-
             for uid in active_list:
                 user = guild.get_member(uid)
                 if not user:
                     print(str(uid) + ' does not point to a valid user!')
                     continue
-                
                 warned = await self.config.member(user).warned()
-                messages = await user.history(limit=1).flatten()
-                if messages:
-                    last_active = messages[0].created_at.date()    # retrieve most recent message time
-                else:
-                    last_active = user.created_at.date()           # or use creation date if no messages
-                
+                last_active = await self.config.member(user).last_active()
+                last_active = datetime.datetime.strptime(last_active,"%Y-%m-%d").date()
                 days_since = (datetime.date.today() - last_active).days
                 if days_since > inactivity_days:
-                    await self._sendMsg(None, user, "Inactivity Notice", inactive_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
-                    await user.add_roles(role)
+                    # await self._sendMsg(None, user, "Inactivity Notice", inactive_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
+                    # await user.add_roles(role)
                     print(user.name + " has been assigned to inactive role")
                 else:
                     new_active_list.append(uid)
                     if days_since > warning_days and not warned:
-                        await self.config.member(user).warned.set(True)
-                        await self._sendMsg(None, user, "Inactivity Reminder", warning_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
+                        # await self.config.member(user).warned.set(True)
+                        # await self._sendMsg(None, user, "Inactivity Reminder", warning_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
                         print(user.name + " has been sent an inactivity warning")
                     else:
                         if warned:                          # active again, remove warned tag
@@ -105,7 +130,7 @@ class AutoInactive(commands.Cog):
     @inact.command(pass_context=True)
     @commands.guild_only()
     async def on(self, ctx):
-        """Starts inactivity monitoring on current server"""
+        """Start inactivity monitoring on current server"""
         role = await self.config.guild(ctx.guild).inactive_role()
         if not role:
             await self._sendMsg(ctx, ctx.author, "Error", "Inactive role not set! Set inactive role before turning this feature on")
@@ -119,16 +144,52 @@ class AutoInactive(commands.Cog):
             await self._sendMsg(ctx, ctx.author, "Success", "Automatic Inactivation set to on for this server!")
             await self.config.active_guilds.set(active_guilds)
 
-            active_list = []
-            role = discord.utils.get(ctx.guild.roles, id=role)
-
-            for user in ctx.guild.members:
-                if user.bot:
-                    continue
-                if role not in user.roles:
-                    active_list.append(user.id)
-            await self.config.guild(ctx.guild).active_list.set(active_list)
  
+    @inact.command(pass_context=True)
+    @commands.guild_only()
+    async def scan(self, ctx, check = False):
+        """
+        Start a serverwide scan for most recent activities
+        Used for populating the server active user list
+        Optional parameter [check] will assign inactive roles immediately when set to True, default False mode waits for next scheduled activity check.
+        """
+        role = await self.config.guild(ctx.guild).inactive_role()
+        role = discord.utils.get(ctx.guild.roles, id=role)
+        if not role:
+            await self._sendMsg(ctx, ctx.author, "Error", "Inactive role not set! Set inactive role before using this feature")
+            return
+
+        await self._sendMsg(ctx, ctx.author, "In progress", "Scanning message history for inactivity, this may take some time...")
+        inactivity_days = await self.config.guild(ctx.guild).inactivity_days()
+        no_activity = datetime.datetime.now() - datetime.timedelta(days = 5000)
+        cutoff = datetime.datetime.now() - datetime.timedelta(days = inactivity_days)
+
+        user_activity = {}                                    # dict of user : most recent activity time
+        active_list = []
+
+        for user in ctx.guild.members:
+            if not user.bot and role not in user.roles:     # not bot and not already inactive
+                user_activity[user.id] = no_activity
+                active_list.append(user.id)
+            await self.config.guild(ctx.guild).active_list.set(active_list)
+
+        for channel in ctx.guild.text_channels:
+            async for message in channel.history(after = cutoff, oldest_first = False):
+                if message.author.id in user_activity:
+                    if message.created_at > user_activity[message.author.id]:
+                        user_activity[message.author.id] = message.created_at
+    
+        for uid, last_active in user_activity.items():
+            user = ctx.guild.get_member(uid)
+            await self.config.member(user).last_active.set(str(last_active.date()))
+
+        if check:
+            await self._checkInactivity()
+            active_list = await self.config.guild(ctx.guild).active_list()
+            await self._sendMsg(ctx, ctx.author, "Successful", f"Scanning complete. There are currently {len(active_list)} active users on this server.")
+        else:
+            await self._sendMsg(ctx, ctx.author, "Successful", "Scanning complete. Most recent activities of all users have been scanned")
+
     @inact.command(pass_context=True)
     @commands.guild_only()   
     async def off(self, ctx):
@@ -253,15 +314,15 @@ class AutoInactive(commands.Cog):
     @commands.command(name="inactivate")
     @commands.has_permissions(administrator=True)
     @commands.guild_only()
-    async def inactivate(self, ctx, user: discord.Member):
+    async def inactivate(self, ctx, user: discord.Member, delayed = None):
         """Override to set someone inactive"""
+        await self.config.member(user).last_active.set(str(datetime.date.today()-datetime.timedelta(days = 500)))
         active_list = await self.config.guild(ctx.guild).active_list()
-        if user.id in active_list:
-            active_list.remove(user.id)
+        if user.id not in active_list:
+            active_list.append(user.id)
             await self.config.guild(ctx.guild).active_list.set(active_list)
-            role = await self.config.guild(ctx.guild).inactive_role()
-            role = discord.utils.get(ctx.guild.roles, id=role)
-            await user.add_roles(role)
+        if not delayed:
+            await self._checkInactivity()
         await self._sendMsg(ctx, ctx.author, "Successful", user.name + " has been set to inactive.")
 
     @commands.command(name="reactivate")
@@ -280,6 +341,7 @@ class AutoInactive(commands.Cog):
             active_list.append(user.id)
             await self.config.guild(ctx.guild).active_list.set(active_list)
             await self.config.member(user).warned.set(False)
+            await self.config.member(user).last_active.set(str(datetime.date.today()))
             await user.remove_roles(role)
         else:
             await self._sendMsg(ctx, user, "Error", "There is nothing to reactivate, you are not marked as inactive!", dm=True)
