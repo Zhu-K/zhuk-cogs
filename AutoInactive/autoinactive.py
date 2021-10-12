@@ -174,9 +174,9 @@ class AutoInactive(commands.Cog):
             await self.config.guild(ctx.guild).active_list.set(active_list)
 
         for channel in ctx.guild.text_channels:
-            async for message in channel.history(after = cutoff, oldest_first = False):
+            async for message in channel.history(limit = None, after = cutoff, oldest_first = False):
                 if message.author.id in user_activity:
-                    print(channel.name, message.created_at, message.author, message.clean_content)
+                    # print(channel.name, message.created_at, message.author, message.clean_content)
                     if message.created_at > user_activity[message.author.id]:
                         user_activity[message.author.id] = message.created_at
     
