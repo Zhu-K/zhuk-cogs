@@ -163,7 +163,7 @@ class AutoInactive(commands.Cog):
             await self._sendMsg(ctx, ctx.author, "Error", "Inactive role not set! Set inactive role before using this feature")
             return        
 
-        await self._sendMsg(ctx, ctx.author, "In progress", "Scanning message history for inactivity, this may take some time...")
+        await ctx.send('Scanning message history for inactivity, this may take some time...')
         inactivity_days = await self.config.guild(ctx.guild).inactivity_days()
         cutoff = datetime.datetime.now() - datetime.timedelta(days = inactivity_days)
 
@@ -182,7 +182,7 @@ class AutoInactive(commands.Cog):
             scan_msg = await ctx.send(f'Scanning [{channel}]...')
             async for message in channel.history(limit = None, after = cutoff, oldest_first = False):
                 count += 1
-                if count % 1000 == 0:
+                if count % 500 == 0:
                     await scan_msg.edit(content = f'Scanning [{channel}]: {count} ...')
                 if message.author.id in user_activity:
                     if message.created_at > user_activity[message.author.id]:
