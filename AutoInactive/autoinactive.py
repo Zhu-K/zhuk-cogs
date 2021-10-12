@@ -182,12 +182,12 @@ class AutoInactive(commands.Cog):
             scan_msg = await ctx.send(f'Scanning [{channel}]...')
             async for message in channel.history(limit = None, after = cutoff, oldest_first = False):
                 count += 1
-                if count % 100 == 0:
+                if count % 1000 == 0:
                     await scan_msg.edit(content = f'Scanning [{channel}]: {count} ...')
                 if message.author.id in user_activity:
                     if message.created_at > user_activity[message.author.id]:
                         user_activity[message.author.id] = message.created_at
-            await scan_msg.edit(content = f'scanned [{channel}]: {count}')
+            await scan_msg.edit(content = f'Scanned [{channel}]: {count}')
             total_count += count
     
         for uid, last_active in user_activity.items():
@@ -199,7 +199,7 @@ class AutoInactive(commands.Cog):
             active_list = await self.config.guild(ctx.guild).active_list()
             await self._sendMsg(ctx, ctx.author, "Successful", f"{total_count} messages scanned. There are currently {len(active_list)} active users on this server.")
         else:
-            await self._sendMsg(ctx, ctx.author, "Successful", f"{total_count} messages scanned. Inactive users will be pruned at the next scheduled check, or use the checknow command")
+            await self._sendMsg(ctx, ctx.author, "Successful", f"{total_count} messages scanned. Inactive users will be pruned during the next scheduled check, or use the `checknow` command to perform it now.")
 
     @inact.command(pass_context=True)
     @commands.guild_only()   
