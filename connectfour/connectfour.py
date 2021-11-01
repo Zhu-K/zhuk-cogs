@@ -255,7 +255,7 @@ class ConnectFour(commands.Cog):
             wins = await self.config.member(players[winner]).wins()
             losses = await self.config.member(players[1 - winner]).losses()
             await self.config.member(players[winner]).wins.set(wins + 1)
-            await self.config.member(players[1 - winner]).wins.set(losses + 1)
+            await self.config.member(players[1 - winner]).losses.set(losses + 1)
 
     async def _join(self, msg, user, game):
         users = await self.config.guild(msg.guild).users()
