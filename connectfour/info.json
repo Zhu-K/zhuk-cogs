@@ -1,0 +1,11 @@
+{
+   "author": ["Kai Zhu"],
+   "min_bot_version": "3.1.1",
+   "short":"Connect 4",
+   "description":"Two player Connect 4 game",
+   "name":"Connect 4",
+   "tags":[
+      "Game"
+   ],
+   "install_msg":"You just installed **connectfour.py**! \nThis is a two-player version of the classic Connect 4 game.\n"
+}
