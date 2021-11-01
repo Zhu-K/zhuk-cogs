@@ -205,7 +205,7 @@ class ConnectFour(commands.Cog):
                     await msg.edit(embed = discord.Embed(colour=discord.Color.dark_blue(), title = "Connect 4", description = f"Cancelled by **{user.display_name}**"))
                     self.activeGames.pop(game.code)
                     self.gameMsgs.pop(msg)
-                elif reaction.emoji == "✅":# and user != game.players[0]:
+                elif reaction.emoji == "✅" and user != game.players[0]:
                     await self._join(msg, user, game)
                     print (self.activeGames)
                 else:
