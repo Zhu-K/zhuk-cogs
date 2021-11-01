@@ -97,7 +97,7 @@ class ConnectFour(commands.Cog):
         new_game = Game(code, turn_timer)
         new_game.join(ctx.author, elo)
         self.activeGames[code] = new_game
-        content = discord.Embed(colour=discord.Color.dark_blue(), title = f'*Connect 4*', description = f'Started by: `{ctx.author.display_name} ({elo})`')
+        content = discord.Embed(colour=discord.Color.dark_blue(), title = f'*Connect 4*', description = f'Started by: `{ctx.author.display_name} ({elo})`\nTime per turn: `{turn_timer} seconds`')
         content.add_field(name = new_game.getStatus(), value = new_game.draw())
         prefix = await self.bot.command_prefix(self.bot, ctx)
         content.set_footer(text = f'Click ✅ or type "{prefix[0]}c4 join {code}" to join this game.')
