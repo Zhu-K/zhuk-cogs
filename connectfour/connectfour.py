@@ -40,14 +40,19 @@ class ConnectFour(commands.Cog):
         active = False
         try:
             for code in self.activeGames:
-                game = self.activeGames[code]
+                game : Game = self.activeGames[code]
                 if game.status == 1:
                     active = True
                     if game.time > 0:
                         game.time -= 1
                     else:
-                        game.status = 5
-                        game.winner = 1 - game.current_player
+                        if game.free_cells < game.width * (game.height - 1) - 1:
+                            game.status = 5
+                            game.winner = 1 - game.current_player
+                        else:
+                            await self._abort(game.message, game.players[game.current_player], game)
+                            # early abort
+
                     await self._draw(game)
         except:
             return
@@ -200,11 +205,7 @@ class ConnectFour(commands.Cog):
             if game.status == 0:     # waiting for opponent
                 if reaction.emoji == "❎" and user == game.players[0]:
                                           # cancel game
-                    await msg.clear_reactions()
-                    
-                    await msg.edit(embed = discord.Embed(colour=discord.Color.dark_blue(), title = "Connect 4", description = f"Cancelled by **{user.display_name}**"))
-                    self.activeGames.pop(game.code)
-                    self.gameMsgs.pop(msg)
+                    await self._abort(game.message, user, game)
                 elif reaction.emoji == "✅" and user != game.players[0]:
                     await self._join(msg, user, game)
                     print (self.activeGames)
@@ -264,10 +265,8 @@ class ConnectFour(commands.Cog):
             await self.config.guild(msg.guild).users.set(users)
         elo = await self.config.member(user).elo()
         game.join(user, elo)                                                     # new player joins!
-
-
+        
         await self._draw(game)
-
         await msg.clear_reactions()
 
         for i in range(1, 8):
@@ -278,3 +277,9 @@ class ConnectFour(commands.Cog):
             self.timeStatus = True
             self._timer.start()
             print("timer started")
+
+    async def _abort(self, msg, user, game):                    
+        await msg.clear_reactions()
+        await msg.edit(embed = discord.Embed(colour=discord.Color.dark_blue(), title = "Connect 4", description = f"Cancelled by **{user.display_name}**"))
+        self.activeGames.pop(game.code)
+        self.gameMsgs.pop(msg)
