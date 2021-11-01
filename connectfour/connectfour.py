@@ -5,9 +5,6 @@ import discord
 from discord.ext import tasks
 from redbot.core import commands
 from redbot.core.utils import mod
-import asyncio
-import datetime
-import time
 import string
 import random
 from .game import Game, reactions, nums
@@ -80,8 +77,11 @@ class ConnectFour(commands.Cog):
 
     @c4.command(pass_context=True)
     @commands.guild_only()   
-    async def start(self, ctx, turn_timer=30):
-        """Start a new game"""
+    async def start(self, ctx, turn_timer=60):
+        """
+        Start a new game, accepts optional turn time
+        Use c4 start <time>, for example, if = is your prefix, =c4 start 50 starts a game with 50 seconds per turn.
+        """
         for game in self.activeGames:
             if ctx.author in self.activeGames[game].players:
                 await self._sendMsg(ctx, None, "Error", f"You are already in a [game]({self.activeGames[game].message.jump_url}), finish or cancel it before starting another!")

@@ -45,7 +45,7 @@ class Board:
         self.cells[col][0] = row                # increment column piece count
         self.cells[col][row] = player           # place piece
         self.free_cells -= 1
-
+        print(f"free cells: {self.free_cells}")
         # check vertical for win
         i = 1
         while i < 4:
@@ -79,7 +79,7 @@ class Board:
                 break
             i += 1
         for j in range(1, 5 - i):
-            if col + j >= self.width or row + j > self.height or self.cells[col + j][row + j] != player:
+            if col + j >= self.width or row + j >= self.height or self.cells[col + j][row + j] != player:
                 break
         else:
             self.winner = player
@@ -88,7 +88,7 @@ class Board:
         # check right-diagonal for win
         i = 1
         while i < 4:
-            if col - i < 0 or row + i > self.height or self.cells[col - i][row + i] != player:
+            if col - i < 0 or row + i >= self.height or self.cells[col - i][row + i] != player:
                 break
             i += 1
         for j in range(1, 5 - i):
