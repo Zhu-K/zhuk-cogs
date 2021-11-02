@@ -59,6 +59,9 @@ class AutoInactive(commands.Cog):
         role = discord.utils.get(ctx.guild.roles, id=role)
         active_set = set(active_list)
         for user in self.buffer:
+            if not isinstance(user, discord.Member):
+                print(f'AutoInactive: {user.displayname()} is discarded because they are not in a monitored channel')
+                continue
             if user.id not in active_set and role not in user.roles:             
                 active_list.append(user.id)
             await self.config.member(user).last_active.set(str(datetime.date.today()))
