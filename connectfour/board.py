@@ -1,12 +1,15 @@
 # column 0 is the count of pieces in current row
 class Board:
-    def __init__(self, cells = [[0] * 7 for _ in range(7)], player = 0) -> None:
-        self.cells = cells
+    def __init__(self, cells = None, player = 0) -> None:
+        if not cells:
+            self.cells = [[0] * 7 for _ in range(7)]
+        else:
+            self.cells = cells
         self.current_player = player
         self.winner = -1
         self.width = len(self.cells)
         self.height = len(self.cells[0])
-        self.free_cells = (self.height - 1) * self.width - sum([col[0] for col in cells])
+        self.free_cells = (self.height - 1) * self.width - sum([col[0] for col in self.cells])
 
     def reset(self):
         for i in range(len(self.cells)):
@@ -45,7 +48,6 @@ class Board:
         self.cells[col][0] = row                # increment column piece count
         self.cells[col][row] = player           # place piece
         self.free_cells -= 1
-        print(f"free cells: {self.free_cells}")
         # check vertical for win
         i = 1
         while i < 4:

@@ -208,7 +208,6 @@ class ConnectFour(commands.Cog):
                     await self._abort(game.message, user, game)
                 elif reaction.emoji == "✅" and user != game.players[0]:
                     await self._join(msg, user, game)
-                    print (self.activeGames)
                 else:
                     await reaction.remove(user)
             elif game.status == 1:
