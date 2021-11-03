@@ -19,7 +19,8 @@ class ConnectFour(commands.Cog):
         default_member = {
             "elo": 1000,
             "wins": 0,
-            "losses": 0
+            "losses": 0,
+            "ties": 0
         }
         
         self.config = Config.get_conf(self, identifier=457758648593)
@@ -164,6 +165,7 @@ class ConnectFour(commands.Cog):
         data = await self.config.member(user).get_raw()
         for k, v in data.items():
             content.add_field(name = k.upper(), value = v)
+        content.add_field(name = "GAMES PLAYED", value = data['wins'] + data['losses' + data['ties'])
         await ctx.send(embed = content)
 
     @c4.command(pass_context=True)
@@ -256,6 +258,11 @@ class ConnectFour(commands.Cog):
             losses = await self.config.member(players[1 - winner]).losses()
             await self.config.member(players[winner]).wins.set(wins + 1)
             await self.config.member(players[1 - winner]).losses.set(losses + 1)
+        else:
+            ties0 = await self.config.member(players[0]).ties()
+            ties1 = await self.config.member(players[1]).ties()
+            await self.config.member(players[0]).ties.set(ties0 + 1)
+            await self.config.member(players[1]).ties.set(ties1 + 1)      
 
     async def _join(self, msg, user, game):
         users = await self.config.guild(msg.guild).users()
