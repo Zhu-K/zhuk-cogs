@@ -20,28 +20,6 @@ class Board:
                     self.cells[i][j] = -1
                 self.winner = -1
 
-    def play(self, player, index, verbose = False):
-        if player == self.current_player:
-            if self.width > index >= 0:
-                if verbose:
-                    pass
-                    #print(f"playing index {index}")
-                if self.cells[index][0] < self.height - 1:
-                    if self._playRaw(player, index, self.cells[index][0] + 1):
-                        return 1
-                        # game ended
-                    else:
-                        self.current_player = 1 - self.current_player
-                else:
-                    pass
-                    # column full, can't add
-            else:
-                pass
-                # invalid index, out of bounds
-        else:
-            pass
-            # not your turn!
-
     def _playRaw(self, player, col, row):
         # returns True if game ends after this play
         

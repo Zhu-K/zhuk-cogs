@@ -1,4 +1,5 @@
 from discord import message
+from discord.member import Member
 from redbot.core import checks, Config, utils
 from redbot.core.i18n import Translator, cog_i18n
 import discord
@@ -165,7 +166,7 @@ class ConnectFour(commands.Cog):
         data = await self.config.member(user).get_raw()
         for k, v in data.items():
             content.add_field(name = k.upper(), value = v)
-        content.add_field(name = "GAMES PLAYED", value = data['wins'] + data['losses' + data['ties'])
+        content.add_field(name = "GAMES PLAYED", value = data['wins'] + data['losses'] + data['ties'])
         await ctx.send(embed = content)
 
     @c4.command(pass_context=True)
@@ -209,7 +210,7 @@ class ConnectFour(commands.Cog):
                                           # cancel game
                     await self._abort(game.message, user, game)
                 elif reaction.emoji == "✅" and user != game.players[0]:
-                    await self._join(msg, user, game)
+                    await self._join(msg, user, game)               # player joined
                 else:
                     await reaction.remove(user)
             elif game.status == 1:
@@ -264,13 +265,16 @@ class ConnectFour(commands.Cog):
             await self.config.member(players[0]).ties.set(ties0 + 1)
             await self.config.member(players[1]).ties.set(ties1 + 1)      
 
-    async def _join(self, msg, user, game):
-        users = await self.config.guild(msg.guild).users()
+    async def _join(self, msg : discord.Message, user : discord.Member, game):
+        users = await self.config.guild(msg.guild).users()                      # add player to active players if not already on the list
         if user.id not in users:
             users.append(user.id)
             await self.config.guild(msg.guild).users.set(users)
         elo = await self.config.member(user).elo()
         game.join(user, elo)                                                     # new player joins!
+
+        content = discord.Embed(colour=discord.Color.blurple(), title = '🎲 Game starting... 🎲', description = f'{user.mention} has joined the [game]({msg.jump_url}) started by {game.players[0].mention}')
+        await msg.channel.send(embed = content, delete_after = 20)
         
         await self._draw(game)
         await msg.clear_reactions()

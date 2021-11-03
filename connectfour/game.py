@@ -39,6 +39,7 @@ class Game(Board):
         self.elos = []
         self.max_time = maxtime
         self.time = self.max_time
+        self.prev_move = 7  # outside of draw range at the start of the game
 
     # def __hash__(self) -> int:
     #     return hash(self.code)
@@ -50,7 +51,31 @@ class Game(Board):
             if len(self.players) == 2:
                 self.current_player = random.getrandbits(1)           # randomize starting player
                 self.status = 1
-                    
+
+
+    def play(self, player, index, verbose = False):
+        if player == self.current_player:
+            if self.width > index >= 0:
+                if verbose:
+                    pass
+                    #print(f"playing index {index}")
+                if self.cells[index][0] < self.height - 1:
+                    self.prev_move = index
+                    if self._playRaw(player, index, self.cells[index][0] + 1):
+                        return 1
+                        # game ended
+                    else:
+                        self.current_player = 1 - self.current_player
+                else:
+                    pass
+                    # column full, can't add
+            else:
+                pass
+                # invalid index, out of bounds
+        else:
+            pass
+            # not your turn!
+            
     def draw(self):
         drawing = ''
         for row in range(self.height - 1, 0, -1):
@@ -60,6 +85,13 @@ class Game(Board):
 
         for col in range(self.width):
             drawing += nums[col + 1]
+
+        drawing += '\n'
+        for col in range(self.width):
+            if col != self.prev_move:
+                drawing += ('▪️')
+            else:
+                drawing += ('▫️')
 
         return drawing
 
