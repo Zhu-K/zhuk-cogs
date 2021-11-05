@@ -184,7 +184,7 @@ class ConnectFour(commands.Cog):
             ranked.append((elo, user))
         ranked.sort(reverse=True)
 
-        leaderboard = f'`{"#":2} {"NAME":20} {"ELO":5} {"WIN":4} {"LOSS":4} {"TIE":4}`\n'
+        leaderboard = f'`{"#":2} {"NAME":20} {"ELO":5} {"WIN":4} {"LOSS":4} TIE`\n'
         count = 0
         for elo, user in ranked:
             count += 1
@@ -271,6 +271,12 @@ class ConnectFour(commands.Cog):
             users.append(user.id)
             await self.config.guild(msg.guild).users.set(users)
         elo = await self.config.member(user).elo()
+
+        for game in self.activeGames:
+            if user in self.activeGames[game].players:
+                await self._sendMsg(msg.channel, None, "Error", f"You are already in a [game]({self.activeGames[game].message.jump_url}), finish or cancel it before starting another!")
+                return
+
         game.join(user, elo)                                                     # new player joins!
 
         content = discord.Embed(colour=discord.Color.blurple(), title = '🎲 Game starting... 🎲', description = f'{user.mention} has joined the [game]({msg.jump_url}) started by {game.players[0].mention}')
