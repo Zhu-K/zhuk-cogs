@@ -50,8 +50,8 @@ class ConnectFour(commands.Cog):
                             game.winner = 1 - game.current_player
                         else:
                             await self._abort(game.message, game.players[game.current_player], game)
+                            continue
                             # early abort
-
                     await self._draw(game)
         except:
             return
@@ -63,13 +63,13 @@ class ConnectFour(commands.Cog):
 
                 
 
-    async def _sendMsg(self, ctx, user, title, msg, dm = False):
+    async def _sendMsg(self, ctx, user, title, msg, dm = False, delete_timer=None):
         data = discord.Embed(colour=discord.Color.dark_blue())
         data.add_field(name = title, value=msg)
         if not dm:
-            await ctx.send(embed=data)
+            await ctx.send(embed=data, delete_after = delete_timer)
         else:
-            await user.send(embed=data)
+            await user.send(embed=data, delete_after = delete_timer)
 
     @commands.group(name="c4")
     @commands.guild_only()
@@ -184,12 +184,12 @@ class ConnectFour(commands.Cog):
             ranked.append((elo, user))
         ranked.sort(reverse=True)
 
-        leaderboard = f'`{"#":2} {"NAME":20} {"ELO":5} {"WIN":4} {"LOSS":4} TIE`\n'
+        leaderboard = f'`{"#":2} {"NAME":20} {"ELO":5} {"WIN":4} {"LOSS":4} TOTAL`\n'
         count = 0
         for elo, user in ranked:
             count += 1
             data = await self.config.member(user).get_raw()
-            leaderboard += f'`{count:<2d} {user.display_name:20} {elo:<5d}{data["wins"]:4d} {data["losses"]: 4d} {data["ties"]: 4d}`\n'
+            leaderboard += f'`{count:<2d} {user.display_name:20} {elo:<5d}{data["wins"]:4d} {data["losses"]: 4d} {data["wins"] + data["losses"] + data["ties"]: 5d}`\n'
             if count == 20:
                 break
         
@@ -211,8 +211,7 @@ class ConnectFour(commands.Cog):
                     await self._abort(game.message, user, game)
                 elif reaction.emoji == "✅" and user != game.players[0]:
                     await self._join(msg, user, game)               # player joined
-                else:
-                    await reaction.remove(user)
+                await reaction.remove(user)
             elif game.status == 1:
                 if user == game.players[game.current_player] and reaction.emoji in reactions:
                     game.play(game.current_player, reactions[reaction.emoji]-1)         # PLAY MOVE
@@ -272,10 +271,10 @@ class ConnectFour(commands.Cog):
             await self.config.guild(msg.guild).users.set(users)
         elo = await self.config.member(user).elo()
 
-        # for game in self.activeGames:
-        #     if user in self.activeGames[game].players:
-        #         await self._sendMsg(ctx, None, "Error", f"You are already in a [game]({self.activeGames[game].message.jump_url}), finish or cancel it before starting another!")
-        #         return
+        for id, game in self.activeGames.items():
+            if user in game.players:
+                await self._sendMsg(msg.channel, None, "Error", f"{user.mention} You are already in a [game]({self.activeGames[id].message.jump_url}), finish or cancel it before starting another!", False, 5)
+                return
 
         game.join(user, elo)                                                     # new player joins!
 
@@ -294,8 +293,9 @@ class ConnectFour(commands.Cog):
             self._timer.start()
             print("timer started")
 
-    async def _abort(self, msg, user, game):                    
-        await msg.clear_reactions()
-        await msg.edit(embed = discord.Embed(colour=discord.Color.dark_blue(), title = "Connect 4", description = f"Cancelled by **{user.display_name}**"))
+    async def _abort(self, msg, user, game):      
         self.activeGames.pop(game.code)
         self.gameMsgs.pop(msg)
+        game.status = 5              
+        await msg.clear_reactions()
+        await msg.edit(embed = discord.Embed(colour=discord.Color.dark_blue(), title = "Connect 4", description = f"Cancelled by **{user.display_name}**"))
