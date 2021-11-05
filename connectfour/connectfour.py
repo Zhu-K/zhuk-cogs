@@ -272,10 +272,10 @@ class ConnectFour(commands.Cog):
             await self.config.guild(msg.guild).users.set(users)
         elo = await self.config.member(user).elo()
 
-        for game in self.activeGames:
-            if user in self.activeGames[game].players:
-                await self._sendMsg(msg.channel, None, "Error", f"You are already in a [game]({self.activeGames[game].message.jump_url}), finish or cancel it before starting another!")
-                return
+        # for game in self.activeGames:
+        #     if user in self.activeGames[game].players:
+        #         await self._sendMsg(ctx, None, "Error", f"You are already in a [game]({self.activeGames[game].message.jump_url}), finish or cancel it before starting another!")
+        #         return
 
         game.join(user, elo)                                                     # new player joins!
 
