@@ -182,14 +182,14 @@ class ConnectFour(commands.Cog):
             user = ctx.guild.get_member(uid)
             elo = await self.config.member(user).elo()
             ranked.append((elo, user))
-        ranked.sort(reverse=True)
+        ranked.sort(key = lambda x: x[0] ,reverse=True)
 
-        leaderboard = f'`{"#":2} {"NAME":20} {"ELO":5} {"WIN":4} {"LOSS":4} TOTAL`\n'
+        leaderboard = f'`{"#":2} {"NAME":15} {"ELO":5} {"WIN":4} {"LOSS":4} TOTAL`\n'
         count = 0
         for elo, user in ranked:
             count += 1
             data = await self.config.member(user).get_raw()
-            leaderboard += f'`{count:<2d} {user.display_name:20} {elo:<5d}{data["wins"]:4d} {data["losses"]: 4d} {data["wins"] + data["losses"] + data["ties"]: 5d}`\n'
+            leaderboard += f'`{count:<2d} {user.display_name:15} {elo:<5d}{data["wins"]:4d} {data["losses"]: 4d} {data["wins"] + data["losses"] + data["ties"]: 5d}`\n'
             if count == 20:
                 break
         
