@@ -180,8 +180,9 @@ class ConnectFour(commands.Cog):
 
         for uid in users:
             user = ctx.guild.get_member(uid)
-            elo = await self.config.member(user).elo()
-            ranked.append((elo, user))
+            if user:
+                elo = await self.config.member(user).elo()
+                ranked.append((elo, user))
         ranked.sort(key = lambda x: x[0] ,reverse=True)
 
         leaderboard = f'`{"#":2} {"NAME":15} {"ELO":5} {"WIN":4} {"LOSS":4} TOTAL`\n'
