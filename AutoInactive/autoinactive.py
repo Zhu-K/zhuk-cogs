@@ -383,7 +383,7 @@ class AutoInactive(commands.Cog):
             last_active = await self.config.member(user).last_active()
             days_since = (datetime.date.today() - datetime.datetime.strptime(last_active,"%Y-%m-%d").date()).days
 
-            body += f'`{user.display_name:12} {last_active:11} {days_since:4d} {("Y" if warned else ""):4}`\n'
+            body += f'`{user.display_name[:12]:12} {last_active:11} {days_since:4d} {("Y" if warned else ""):4}`\n'
 
             if count == 0:
                 content = discord.Embed(colour=discord.Color.blurple(), title = "Active Member List" if page == 0 else "", description = body)

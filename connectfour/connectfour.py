@@ -190,7 +190,7 @@ class ConnectFour(commands.Cog):
         for elo, user in ranked:
             count += 1
             data = await self.config.member(user).get_raw()
-            leaderboard += f'`{count:<2d} {user.display_name:15} {elo:<5d} {data["wins"]:4d} {data["losses"]: 4d} {data["wins"] + data["losses"] + data["ties"]: 5d}`\n'
+            leaderboard += f'`{count:<2d} {user.display_name[:15]:15} {elo:<5d} {data["wins"]:4d} {data["losses"]: 4d} {data["wins"] + data["losses"] + data["ties"]: 5d}`\n'
             if count == 20:
                 break
         
