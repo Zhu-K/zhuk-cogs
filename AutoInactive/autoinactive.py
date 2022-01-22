@@ -360,3 +360,38 @@ class AutoInactive(commands.Cog):
             await user.remove_roles(role)
         else:
             await self._sendMsg(ctx, user, "Error", "There is nothing to reactivate, you are not marked as inactive!", dm=True)
+
+
+    @commands.command(name="activelist")
+    @commands.has_permissions(administrator=True)
+    @commands.guild_only()
+    async def activelist(self, ctx, user: discord.Member, delayed = None):
+        """Lists all active members"""
+
+        active_list = await self.config.guild(ctx.guild).active_list()
+
+        body = f'`{"NAME":12} {"LAST ACTIVE":11} {"DAYS":4} {"WARN":4}`\n'
+        count = 0
+        page = 0
+
+        for uid in active_list:
+            user = ctx.guild.get_member(uid)
+            if not user:
+                print(str(uid) + ' does not point to a valid user!')
+                continue
+            
+            count = (count + 1) % 110
+            warned = await self.config.member(user).warned()
+            last_active = await self.config.member(user).last_active()
+            days_since = (datetime.date.today() - datetime.datetime.strptime(last_active,"%Y-%m-%d").date()).days
+
+            body += f'`{user.display_name:12} {last_active:11} {days_since:4d} {("Y" if warned else ""):4}`\n'
+
+            if count == 0:
+                content = discord.Embed(colour=discord.Color.blurple(), title = "Active Member List" if page == 0 else "", description = body)
+                await ctx.send(embed = content)
+                page += 1
+                
+        if count > 0 or page == 0:
+            content = discord.Embed(colour=discord.Color.blurple(), title = "Active Member List" if page == 0 else "", description = body)
+        await ctx.send(embed = content)
