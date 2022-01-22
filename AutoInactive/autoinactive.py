@@ -389,6 +389,7 @@ class AutoInactive(commands.Cog):
                 content = discord.Embed(colour=discord.Color.blurple(), title = "Active Member List" if page == 0 else "", description = body)
                 await ctx.send(embed = content)
                 page += 1
+                content = ""
                 
         if count > 0 or page == 0:
             content = discord.Embed(colour=discord.Color.blurple(), title = "Active Member List" if page == 0 else "", description = body)
