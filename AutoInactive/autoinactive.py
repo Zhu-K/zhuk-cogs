@@ -361,11 +361,9 @@ class AutoInactive(commands.Cog):
         else:
             await self._sendMsg(ctx, user, "Error", "There is nothing to reactivate, you are not marked as inactive!", dm=True)
 
-
-    @commands.command(name="activelist")
-    @commands.has_permissions(administrator=True)
+    @inact.command(pass_context=True)    
     @commands.guild_only()
-    async def activelist(self, ctx, user: discord.Member, delayed = None):
+    async def activelist(self, ctx):
         """Lists all active members"""
 
         active_list = await self.config.guild(ctx.guild).active_list()
