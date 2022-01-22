@@ -110,7 +110,7 @@ class AutoInactive(commands.Cog):
                         await self._sendMsg(None, user, "Inactivity Reminder", warning_msg.format(guildname = guild.name, days = days_since, maxdays = inactivity_days), dm=True)
                         print(user.name + " has been sent an inactivity warning")
                     else:
-                        if warned:                          # active again, remove warned tag
+                        if days_since <= warning_days and warned:                          # active again, remove warned tag
                             await self.config.member(user).warned.set(False)
             await self.config.guild(guild).active_list.set(new_active_list)
             await self.config.guild(guild).newly_inactivated.set(newly_inactivated)
