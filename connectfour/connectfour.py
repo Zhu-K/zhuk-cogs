@@ -15,7 +15,6 @@ class ConnectFour(commands.Cog):
     """Connect Four Game"""
 
     def __init__(self, bot):
-        super().__init__()
         self.bot = bot
         default_member = {
             "elo": 1000,
