@@ -9,7 +9,6 @@ import time
 class AutoInactive(commands.Cog):
     """The Automatic Inactivity Role Assigner Cog"""
     def __init__(self, bot):
-        super().__init__()
         self.bot = bot
         self.DEFAULT_WARNING = "Just a friendly reminder that you have been inactive in {guildname} for {days} days. Our server assigns an inactive status after {maxdays} days of inactivity. Come say hi!"
         self.DEFAULT_MSG = "You have been assigned the inactive role due to inactivity after {maxdays} days."
