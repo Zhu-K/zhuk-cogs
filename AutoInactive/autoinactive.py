@@ -59,7 +59,7 @@ class AutoInactive(commands.Cog):
         active_set = set(active_list)
         for user in self.buffer:
             if not isinstance(user, discord.Member):
-                print(f'AutoInactive: {user.displayname()} is discarded from buffer because they are not in a monitored channel')
+                print(f'AutoInactive: {user.display_name} is discarded from buffer because they are not in a monitored channel')
                 continue
             if user.id not in active_set and role not in user.roles:             
                 active_list.append(user.id)
