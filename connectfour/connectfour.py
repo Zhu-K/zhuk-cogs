@@ -162,7 +162,7 @@ class ConnectFour(commands.Cog):
             user = ctx.author
 
         content = discord.Embed(colour=discord.Color.blurple(), title = user.display_name)
-        content.set_thumbnail(url = user.avatar_url)
+        content.set_thumbnail(url=user.avatar.url)
         data = await self.config.member(user).get_raw()
         for k, v in data.items():
             content.add_field(name = k.upper(), value = v)
