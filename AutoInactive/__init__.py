@@ -1,4 +1,4 @@
 from .autoinactive import AutoInactive
 
-def setup(bot):
-    bot.add_cog(AutoInactive(bot))
+async def setup(bot):
+    await bot.add_cog(AutoInactive(bot))

@@ -9,7 +9,6 @@ import time
 class AutoInactive(commands.Cog):
     """The Automatic Inactivity Role Assigner Cog"""
     def __init__(self, bot):
-        super().__init__()
         self.bot = bot
         self.DEFAULT_WARNING = "Just a friendly reminder that you have been inactive in {guildname} for {days} days. Our server assigns an inactive status after {maxdays} days of inactivity. Come say hi!"
         self.DEFAULT_MSG = "You have been assigned the inactive role due to inactivity after {maxdays} days."
@@ -60,7 +59,7 @@ class AutoInactive(commands.Cog):
         active_set = set(active_list)
         for user in self.buffer:
             if not isinstance(user, discord.Member):
-                print(f'AutoInactive: {user.displayname()} is discarded from buffer because they are not in a monitored channel')
+                print(f'AutoInactive: {user.display_name} is discarded from buffer because they are not in a monitored channel')
                 continue
             if user.id not in active_set and role not in user.roles:             
                 active_list.append(user.id)

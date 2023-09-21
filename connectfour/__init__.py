@@ -1,4 +1,4 @@
 from .connectfour import ConnectFour
 
-def setup(bot):
-    bot.add_cog(ConnectFour(bot))
+async def setup(bot):
+    await bot.add_cog(ConnectFour(bot))
